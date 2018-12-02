@@ -1,13 +1,33 @@
 <!doctype html>
 <html>
     <head>
-        <title>Blog</title>
+        <title>{{title}}</title>
+        <style>
+            .error{
+                color:red;
+                
+            }
+            h1{
+                text-align: center;
+            }
+            .title{
+                font-size: 30px;
+                font-weight: bold;
+                margin-bottom: 20px;
+            }
+            ul li{
+                list-style-type: none;
+                
+            }
+        </style>
     </head>
-
 <body>
-    <h1> {{ pagetitle }} </h1>
-    <h3 style="display:inline-block"><a href="http://localhost:5000/newpost">Add a new blog</a></h3> 
-    <h3 ><a href="http://localhost:5000/blog">My blog</a></h3>
+    
+
+    <a href="/blog">Main Blog Page</a>
+    <a href='/'>Add a Blog Entry</a>
+
+    <h1>{{title}}</h1>
 
     {% block content %}
     {% endblock %}

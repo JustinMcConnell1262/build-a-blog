@@ -1,63 +1,69 @@
-from flask import Flask, request, render_template, redirect
+from flask import Flask, request, redirect, render_template, session, flash
 from flask_sqlalchemy import SQLAlchemy
 
-app  = Flask(__name__)
+app = Flask(__name__)
 app.config['DEBUG'] = True
-app.config['SQLALCHEMY-ECHO'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://build-a-blog:hiworld@localhost:8889'
 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://build-a-blog:hiworld@localhost:8889/build-a-blog'
+app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
+app.secret_key = 'fdgshkjldfshgksd'
 
-class Blog(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
-    subject = db.Column(db.String(100))
-    text = db.Column(db.String(900))
+class Blog_post(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(500))
+    post = db.Column(db.String(500))
+ 
 
-    def __init__ (self, subject, text):
-        self.subject = subject
-        self.text = text 
-        
+    def __init__(self, title, post):
+        self.title = title
+        self.post = post
+
+@app.route('/error', methods=['POST', 'GET'])
+def error():
+    error = 'Both fields need to be filled out'
+    return render_template('newpost.html', error=error, title="Add a Blog Entry")
 
 @app.route('/blog', methods=['POST', 'GET'])
+def blog(): 
+    if request.method == 'GET':
+        blogpost = Blog_post.query.all()
+        return render_template('blog.html', title='Add a Blog Entry', blogpost=blogpost)
+    blog_title = request.form['blog_title']
+    blog_body = request.form['blog_body']
+    if len(blog_title) == 0 or len(blog_body) == 0:
+        return redirect('/error')         
+    new_post = Blog_post(blog_title, blog_body)
+    db.session.add(new_post)
+    db.session.commit()
+    blogpost = Blog_post.query.all()
+    return render_template('blog.html', blog_title=blog_title, blogpost=blogpost, title='Add a Blog Entry')
+
+@app.route('/blogs', methods=['GET', 'POST'])
+def blogs():
+    ids = int(request.args.get('id', ''))
+    blog_posts = Blog_post.query.get(ids)
+    new_title = blog_posts.title
+    body = blog_posts.post
+    return render_template('entry.html', title=new_title, body=body)
+    
+@app.route('/post', methods=['POST'])
+def post():
+    blog_body = request.form['blog_body']
+    blog_title = request.form['blog_title']
+    new_post = Blog_post(blog_title, blog_body)
+    db.session.add(new_post)
+    db.session.commit()
+    blogpost = Blog_post.query.all()
+    return render_template('entry.html', body=blog_body, title=blog_title )
+
+
+@app.route('/', methods=['GET', 'POST'])
 def index():
-
     if request.method == 'POST':
-        new_subject = request.form.get('subject')
-        new_text = request.form['text']
-        list_blog = Blog(new_subject, new_text)
+        return render_template('/blogs')  
 
-        db.session.add(list_blog)
-        db.session.commit()
-
-    
-    blog = Blog.query.all()
-
-
-    
-    if request.args.get('id'):
-        id = request.args.get('id')
-        view = Blog.query.get(id)
-        return render_template('viewBlog.html', pagetitle = view.subject, show_text = view.text )
-    
-    return render_template('blog.html', pagetitle = 'My Blog', blog = blog)
-
-
-'''@app.route('/newpost', methods=['POST', 'GET'])
-def newBlog():
-    
-     if request.method == 'POST':
-        id = request.form.get('')
-        
-
-     return render_template('addBlog.html', pagetitle = "Add A New Blog")
-
-@app.route('/view')
-def viewBlog():
-    id = request.args.get('id')
-    #display_subject = Blog.query.filter_by(id = id).all()
-    return str(id)
-    
-
+    return render_template('newpost.html', title='Add a Blog Entry'  )
 
 if __name__ == '__main__':
-    app.run()
+    app.run(

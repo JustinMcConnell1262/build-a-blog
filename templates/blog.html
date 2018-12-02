@@ -1,22 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-
-    {% if blog|length == 0 %}
-      <p>No blogs available. Let's create one!</p>
-    {% else %}
-
-        {% for post in blog %}
-            
-            <h2><a href="http://localhost:5000/blog?id={{ post.id}}"+str(id)>{{ post.subject }}</a></h2>
-            <form>
-                <input type = "hidden" name="task-id" value="{{post.id}}">
-            </form>
-            <p>{{post.text}}</p>
-            
-            <hr />
-        {% endfor %}
-
-    {% endif %}
-
+<ul>
+    {% for blogposts in blogpost %}
+    <li class='title'><a href='/blogs?id={{blogposts.id}}'>{{blogposts.title}}</a></li>
+    <li>{{blogposts.post}}</li>
+    <hr />
+    {% endfor %}
+</ul>
 {% endblock %}
