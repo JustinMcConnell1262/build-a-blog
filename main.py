@@ -1,65 +1,69 @@
-from flask import Flask, request, redirect, render_template, flash, url_for
+from flask import Flask, request, redirect, render_template, session, flash
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://build-a-blog:hiworld@localhost:8889/build-a-blog'
 app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
-app.secret_key = 'y337kGcys&zP3B'
+app.secret_key = 'fdgshkjldfshgksd'
 
-class Blog(db.Model):
-
+class Blog_post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(120))
-    body = db.Column(db.String(1000))
+    title = db.Column(db.String(500))
+    post = db.Column(db.String(500))
+ 
 
-    def __init__(self, title, body):
+    def __init__(self, title, post):
         self.title = title
-        self.body = body
+        self.post = post
 
-@app.route("/blog", methods=['POST', 'GET'])
-def blog():
-    blogs = Blog.query.all()
-    title = "title"
-    body = "body"
-    if request.args:
-        blog_id = request.args.get('id')
-        for blog in blogs:
-            if int(blog_id) == blog.id:
-                title = blog.title
-                body = blog.body
-                return render_template('post.html', title=title, body=body)
-    else:
-        return render_template("blog.html", heading="What a time to be a blog", blogs=blogs)
+@app.route('/error', methods=['POST', 'GET'])
+def error():
+    error = 'Both fields need to be filled out'
+    return render_template('newpost.html', error=error, title="Add a Blog Entry")
 
-@app.route("/newpost", methods=['POST', 'GET'])
-def newpost():
-    title = ""
-    body = ""
+@app.route('/blog', methods=['POST', 'GET'])
+def blog(): 
     if request.method == 'GET':
-        return render_template("newpost.html", heading="New Blog Entry")
+        blogpost = Blog_post.query.all()
+        return render_template('blog.html', title='Add a Blog Entry', blogpost=blogpost)
+    blog_title = request.form['blog_title']
+    blog_body = request.form['blog_body']
+    if len(blog_title) == 0 or len(blog_body) == 0:
+        return redirect('/error')         
+    new_post = Blog_post(blog_title, blog_body)
+    db.session.add(new_post)
+    db.session.commit()
+    blogpost = Blog_post.query.all()
+    return render_template('blog.html', blog_title=blog_title, blogpost=blogpost, title='Add a Blog Entry')
+
+@app.route('/blogs', methods=['GET', 'POST'])
+def blogs():
+    ids = int(request.args.get('id', ''))
+    blog_posts = Blog_post.query.get(ids)
+    new_title = blog_posts.title
+    body = blog_posts.post
+    return render_template('entry.html', title=new_title, body=body)
+    
+@app.route('/post', methods=['POST'])
+def post():
+    blog_body = request.form['blog_body']
+    blog_title = request.form['blog_title']
+    new_post = Blog_post(blog_title, blog_body)
+    db.session.add(new_post)
+    db.session.commit()
+    blogpost = Blog_post.query.all()
+    return render_template('entry.html', body=blog_body, title=blog_title )
+
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
     if request.method == 'POST':
-        title = request.form['title']
-        body = request.form['body']
-        if not title and not body:
-            flash("Please enter a title for your blog")
-            flash("Please enter a body for your blog")
-            return render_template("newpost.html", heading="New Blog Entry")
-        elif not title:
-            flash("Please enter a title for your blog")
-            return render_template("newpost.html", heading="New Blog Entry", body=body)
-        elif not body:
-            flash("Please enter content for your blog")
-            return render_template("newpost.html", heading="New Blog Entry", title=title)
-        else:
-            new_post = Blog(title, body)
-            db.session.add(new_post)
-            db.session.commit()
-            blogs = Blog.query.all()
-            post = blogs[-1]
-            post_id = post.id
-            return redirect(url_for('blog' , id=post_id))
+        return render_template('/blogs')  
+
+    return render_template('newpost.html', title='Add a Blog Entry'  )
 
 if __name__ == '__main__':
-    app.run()
+app.run()
