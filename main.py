@@ -42,7 +42,7 @@ def index():
     return render_template('blog.html', pagetitle = 'My Blog', blog = blog)
 
 
-@app.route('/newpost', methods=['POST', 'GET'])
+'''@app.route('/newpost', methods=['POST', 'GET'])
 def newBlog():
     
      if request.method == 'POST':
