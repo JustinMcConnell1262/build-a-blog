@@ -1,11 +1,10 @@
-
 from flask import Flask, request, render_template, redirect
 from flask_sqlalchemy import SQLAlchemy
 
 app  = Flask(__name__)
 app.config['DEBUG'] = True
 app.config['SQLALCHEMY-ECHO']=True
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://build-a-blog:root@localhost:8889/build-a-blog'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://build-a-blog:hiworld@localhost:8888/build-a-blog'
 
 db = SQLAlchemy(app)
 
@@ -61,4 +60,4 @@ def viewBlog():
 
 
 if __name__ == '__main__':
-app.run()
+    app.run()
