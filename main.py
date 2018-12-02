@@ -11,14 +11,14 @@ db = SQLAlchemy(app)
 class Blog(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     subject = db.Column(db.String(60))
-    text = db.Column(db.String(300))
+    text = db.Column(db.String())
 
     def __init__ (self, subject, text):
         self.subject = subject
         self.text = text 
         
 
-@app.route('/blog', methods=['POST', 'GET'])
+@app.route('/', methods=['POST', 'GET'])
 def index():
 
     if request.method == 'POST':
