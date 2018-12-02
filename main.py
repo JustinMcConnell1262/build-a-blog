@@ -1,69 +1,75 @@
-from flask import Flask, request, redirect, render_template, session, flash
+from flask import Flask, request, redirect, render_template
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
-
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://build-a-blog:hiworld@localhost:8889/build-a-blog'
+# Note: the connection string after :// contains the following info:
+# user:password@server:portNumber/databaseName
 app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
-app.secret_key = 'fdgshkjldfshgksd'
 
-class Blog_post(db.Model):
+class Blog(db.Model):
+
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(500))
-    post = db.Column(db.String(500))
- 
+    title = db.Column(db.String(100))
+    body = db.Column(db.String(5000))
 
-    def __init__(self, title, post):
+    def __init__(self, title, body):
         self.title = title
-        self.post = post
-
-@app.route('/error', methods=['POST', 'GET'])
-def error():
-    error = 'Both fields need to be filled out'
-    return render_template('newpost.html', error=error, title="Add a Blog Entry")
-
-@app.route('/blog', methods=['POST', 'GET'])
-def blog(): 
-    if request.method == 'GET':
-        blogpost = Blog_post.query.all()
-        return render_template('blog.html', title='Add a Blog Entry', blogpost=blogpost)
-    blog_title = request.form['blog_title']
-    blog_body = request.form['blog_body']
-    if len(blog_title) == 0 or len(blog_body) == 0:
-        return redirect('/error')         
-    new_post = Blog_post(blog_title, blog_body)
-    db.session.add(new_post)
-    db.session.commit()
-    blogpost = Blog_post.query.all()
-    return render_template('blog.html', blog_title=blog_title, blogpost=blogpost, title='Add a Blog Entry')
-
-@app.route('/blogs', methods=['GET', 'POST'])
-def blogs():
-    ids = int(request.args.get('id', ''))
-    blog_posts = Blog_post.query.get(ids)
-    new_title = blog_posts.title
-    body = blog_posts.post
-    return render_template('entry.html', title=new_title, body=body)
-    
-@app.route('/post', methods=['POST'])
-def post():
-    blog_body = request.form['blog_body']
-    blog_title = request.form['blog_title']
-    new_post = Blog_post(blog_title, blog_body)
-    db.session.add(new_post)
-    db.session.commit()
-    blogpost = Blog_post.query.all()
-    return render_template('entry.html', body=blog_body, title=blog_title )
+        self.body = body
 
 
-@app.route('/', methods=['GET', 'POST'])
+def validate_title(title):
+    title, title_error = title, ""
+    if title == "":
+        title_error = "Blog entry must have a title."
+    return title, title_error
+
+def validate_body(body):
+    body, body_error = body, ""
+    if body == "":
+        body_error = "Blog entry must have content."
+    elif len(body) > 5000:
+        body_error = "Blog entry cannot be more than 5000 characters long."
+    return body, body_error
+
+@app.route('/blog', methods=["POST", "GET"])
 def index():
-    if request.method == 'POST':
-        return render_template('/blogs')  
+    entries = Blog.query.all()
+    
+    if "id" in request.args:
+        id = request.args.get('id')
+        entry = Blog.query.get(id)
+        
+        return render_template('entries.html', page_title="blog-post", title = entry.title, body = entry.body)
+    
+    return render_template('posts.html', page_title="blog", entries = entries)
 
-    return render_template('newpost.html', title='Add a Blog Entry'  )
+
+@app.route('/newpost', methods=["POST", "GET"])
+def add_entry():
+  
+    return render_template('newpost.html', page_title="blog")
+
+
+@app.route('/validate', methods=["POST", "GET"])
+def validate():
+    title, title_error = validate_title(request.form["title"])
+    body, body_error = validate_body(request.form["body"])
+    
+    if not title_error and not body_error:
+        if request.method == "POST":
+            title_name = request.form['title']
+            body_name = request.form['body']
+            new_entry = Blog(title_name, body_name)
+            db.session.add(new_entry)
+            db.session.commit()
+        
+        return render_template('entries.html', page_title = "confirmation", title = title, body = body)
+    else:
+        return render_template('newpost.html', page_title = "blog", title = title, title_error = title_error, body = body, body_error = body_error)
+
 
 if __name__ == '__main__':
-app.run()
+    app.run()
