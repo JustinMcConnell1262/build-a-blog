@@ -8,7 +8,7 @@
 
         {% for post in blog %}
             
-            <h2><a href="http://localhost:5000\blog?id={{ post.id}}"+str(id)>{{ post.subject }}</a></h2>
+            <h2><a href="http://localhost:5000/blog?id={{ post.id}}"+str(id)>{{ post.subject }}</a></h2>
             <form>
                 <input type = "hidden" name="task-id" value="{{post.id}}">
             </form>

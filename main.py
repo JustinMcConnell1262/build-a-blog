@@ -10,8 +10,8 @@ db = SQLAlchemy(app)
 
 class Blog(db.Model):
     id = db.Column(db.Integer, primary_key = True)
-    subject = db.Column(db.String(60))
-    text = db.Column(db.String(300))
+    subject = db.Column(db.String(100))
+    text = db.Column(db.String(900))
 
     def __init__ (self, subject, text):
         self.subject = subject
