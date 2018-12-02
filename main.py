@@ -4,21 +4,21 @@ from flask_sqlalchemy import SQLAlchemy
 app  = Flask(__name__)
 app.config['DEBUG'] = True
 app.config['SQLALCHEMY-ECHO']=True
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://build-a-blog:hiworld@localhost:8888/build-a-blog'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://build-a-blog:hiworld@localhost:8889'
 
 db = SQLAlchemy(app)
 
 class Blog(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     subject = db.Column(db.String(60))
-    text = db.Column(db.String())
+    text = db.Column(db.String(300))
 
     def __init__ (self, subject, text):
         self.subject = subject
         self.text = text 
         
 
-@app.route('/', methods=['POST', 'GET'])
+@app.route('/blog', methods=['POST', 'GET'])
 def index():
 
     if request.method == 'POST':
